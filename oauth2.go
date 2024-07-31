@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -46,6 +47,12 @@ func (df demoFlag) endpoint() oauth2.Endpoint {
 }
 
 func (df demoFlag) tokenURI() string {
+	baseURL := os.Getenv("DOCUSIGN_BASE_URL")
+
+	if baseURL != "" {
+		return strings.TrimSuffix(strings.Replace(baseURL, "https://", "", 1), "/")
+	}
+
 	if df {
 		return "account-d.docusign.com"
 	}
@@ -277,9 +284,10 @@ func (c *JWTConfig) UserConsentURL(redirectURL string, scopes ...string) string 
 // prompt determines whether the user is prompted for re-authentication, even with an active login session.
 //
 // scopes permissions being requested for the application from each user in the organization.  Valid values are
-//   signature — allows your application to create and send envelopes, and obtain links for starting signing sessions.
-//   extended — issues your application a refresh token that can be used any number of times (Authorization Code flow only).
-//   impersonation — allows your application to access a user’s account and act on their behalf via JWT authentication.
+//
+//	signature — allows your application to create and send envelopes, and obtain links for starting signing sessions.
+//	extended — issues your application a refresh token that can be used any number of times (Authorization Code flow only).
+//	impersonation — allows your application to access a user’s account and act on their behalf via JWT authentication.
 func (c *JWTConfig) ExternalAdminConsentURL(redirectURL, authType, state string, prompt bool, scopes ...string) (string, error) {
 	if authType != "code" && authType != "token" {
 		return "", fmt.Errorf("invalid authType %s, must be code or token", authType)
